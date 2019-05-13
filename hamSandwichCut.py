@@ -1,99 +1,8 @@
-import random
 import math
 import numpy as np
 import matplotlib.pyplot as plt
 from shapely.geometry import Point, LineString
-
-def random_point_generator(n, lower_bound=-20, upper_bound=20):
-	points = []
-	for i in range(n):
-		x = random.uniform(lower_bound, upper_bound)
-		y = random.uniform(lower_bound,upper_bound)
-		points.append(Point(x, y))
-	return points
-
-def dual_line(point):
-	return Line(point.x, point.y)
-
-def get_intersection(l1, l2):
-	x = np.inf
-	y = np.inf
-
-	if l1.m != l2.m:
-		x = (l2.b - l1.b) / (l1.m - l2.m)
-		y = l1.m * x + l1.b
-	return Point(x, y)
-
-def prepare_axis(min_x=-10,max_x=10,min_y=-10,max_y=10):
-	plt.grid(False,which='major')
-	ax = plt.gca()
-	ax.set_xlim(min_x,max_x)
-	ax.set_ylim(min_y,max_y)
-	plt.xticks(np.arange(min(np.array(ax.get_xlim())), max(np.array(ax.get_xlim()))+1, 1.0))
-	plt.yticks(np.arange(min(np.array(ax.get_ylim())), max(np.array(ax.get_ylim()))+1, 1.0))
-	plt.axhline(0, color='green')
-	plt.axvline(0, color='green')
-
-def plot_line(line, color):
-	axes = plt.gca()
-	x_vals = np.array(axes.get_xlim())
-	y_vals = line.b + line.m * x_vals
-	plt.plot(x_vals, y_vals, ls='--', color=color)
-
-def plot_point(point, color, marker='o', size=5):
-	plt.plot(point.x, point.y, color=color, marker=marker, markersize=size)
-
-def plot_points(obj, time_pause=0.5):
-	for i in range(len(obj.red_points)):		
-		plot_point(obj.red_points[i], color='red')
-		plt.draw()
-		plt.pause(time_pause)
-	
-	if obj.extra_red:
-		plot_point(obj.extra_red, color='red')
-		plt.pause(time_pause)
-
-	for i in range(len(obj.blue_points)):		
-		plot_point(obj.blue_points[i], color='blue')
-		plt.draw()
-		plt.pause(time_pause)	
-	
-	if obj.extra_blue:
-		plot_point(obj.extra_blue, color='blue')
-		plt.pause(time_pause)	
-
-def plot_points_and_duals(obj, time_pause=0.5):
-	for i in range(len(obj.red_points)):		
-		plot_point(obj.red_points[i], color='red')
-		plt.draw()
-		plt.pause(time_pause)
-		plot_line(obj.red_duals[i], color='red')
-		plt.pause(time_pause)
-
-	if obj.extra_red:
-		plot_point(obj.extra_red, color='red')
-		plt.pause(time_pause)
-		plot_line(dual_line(obj.extra_red), color='red')
-		plt.pause(time_pause)
-
-	for i in range(len(obj.blue_points)):		
-		plot_point(obj.blue_points[i], color='blue')
-		plt.draw()
-		plt.pause(time_pause)
-		plot_line(obj.blue_duals[i], color = 'blue')
-		plt.pause(time_pause)
-
-	if obj.extra_blue:
-		plot_point(obj.extra_blue, color='blue')
-		plt.pause(time_pause)
-		plot_line(dual_line(obj.extra_blue), color='blue')
-		plt.pause(time_pause)
-	#plt.show()
-
-class Line:
-	def __init__(self, m, b):
-		self. m = m
-		self.b =  b
+from helper import *
 
 class PointSet:
 	def __init__(self, num_red_pts, num_blue_pts):
@@ -107,9 +16,9 @@ class PointSet:
 		
 		self.point_set = self.red_points + self.blue_points
 		if(int(num_red_pts)%2 == 0):
-			self.extra_red = red_points.pop()
+			self.extra_red = self.red_points.pop()
 		if(int(num_blue_pts)%2 == 0):
-			self.extra_blue = blue_points.pop()
+			self.extra_blue = self.blue_points.pop()
 
 		#extra red and blue  points are not included in this set
 		self.red_duals = [dual_line(point) for point in self.red_points]
@@ -170,7 +79,7 @@ class PointSet:
 		for i in range(0,len(med_levels)-1):
 			x1, x2 = med_levels[i].x, med_levels[i+1].x
 			y1, y2 = med_levels[i].y, med_levels[i+1].y
-			plt.plot([x1, x2], [y1, y2], linestyle='-', color = color)
+			plt.plot([x1, x2], [y1, y2], linestyle='-', color = color, linewidth=3)
 			plt.pause(0.5)
 
 		return LineString(med_levels)
@@ -180,7 +89,7 @@ class PointSet:
 		blue_intersections = self.get_intersections(self.blue_duals)
 
 		min_y, max_y = self.find_ycoord_bound()
-		prepare_axis(self.interval[0]-5, self.interval[1]+5, min_y-5,max_y+5)
+		prepare_axis(self.interval[0]-1, self.interval[1]+1, min_y-5,max_y+5)
 
 		plt.title('Median Levels')
 		red_med_linestring = self.get_med_linestring(self.red_duals, red_intersections, color='red')
@@ -192,16 +101,16 @@ class PointSet:
 		ham_cut_dual = [dual_line(point) for point in ham_cut_points]
 
 		for point in ham_cut_points:
-			plot_point(point, marker='P', color = 'purple', size=20)
+			plot_point(point, marker='*', color = 'purple', size=20)
 
 		input('Ready to check out the Ham Sandwich Cut? :D')
 		plt.gca().clear()
 		plt.title('Ham Sandwich Cut')
 		min_x, max_x = self.find_xcoord_bound()
-		prepare_axis(self.interval[0]-5, self.interval[1]+5, min_y-5, max_y+5)
+		prepare_axis(min_x-5, max_x+5, min_y-5, max_y+5)
 
 		for point in ham_cut_points:
-			plot_point(point, marker= 'P', color='orange', size=20)
+			plot_point(point, marker= '*', color='black', size=20)
 
 		plot_points(self)
 		for hc in ham_cut_dual:
@@ -217,16 +126,16 @@ class PointSet:
 		right_blue_med = self.find_median_level(interval[1], self.blue_duals)
 
 		# interval_medians = [Point(interval.l, l_red_med), Point(interval.l, l_blue_med), Point(interval.r, r_red_med), Point(interval.r, r_blue_med)]
-
-		min_y, max_y = self.find_ycoord_bound()
-		prepare_axis(self.interval[0]-5, self.interval[1]+5, min_y-5,max_y+5)
+		med_intersections = [left_red_med, left_blue_med, right_red_med, right_blue_med]
+		min_y, max_y = min(med_intersections),  max(med_intersections)
+		prepare_axis(interval[0]-5, interval[1]+5, min_y-5,max_y+5)
 		self.intervalymin = min_y
 		self.intervalymax = max_y
 
 	    # plot_interval
-		plt.axvline(x=interval[0], linestyle='-', color='black')
-		plt.axvline(x=interval[1], linestyle='-', color='black')
-		plt.pause(1)
+		plt.axvline(x=interval[0], linestyle='--', color='yellow')
+		plt.axvline(x=interval[1], linestyle='--', color='yellow')
+		plt.pause(0.5)
 	        
 		plot_point(Point(interval[0], left_red_med), color='red', marker='*',size=15)
 		plot_point(Point(interval[0], left_blue_med), color='blue', marker='*', size=15)
@@ -245,7 +154,7 @@ class PointSet:
 
 		return (lmr - lmb)*(rmr - rmb) < 0
 
-	def find_cut(self, time_pause=1):
+	def find_cut(self, time_pause=0.8):
 		plt.gca().clear()
 		min_x, max_x = self.find_xcoord_bound()
 		min_y, max_y = self.find_ycoord_bound()
@@ -257,7 +166,6 @@ class PointSet:
 
 		plt.gca().clear()
 		prepare_axis(self.interval[0]-5, self.interval[1]+5, min_y-5, max_y+5)
-
 		plt.title('Points and Duals')
 		plot_points_and_duals(self)
 		
@@ -268,9 +176,12 @@ class PointSet:
 		    mid = float((self.interval[0] + self.interval[1]) / 2.0)
 		    left_int = [self.interval[0], mid]
 		    right_int = [mid, self.interval[1]]
+
 		    self.display_interval_medlevel_intersection(left_int)
+		    #input("checking left half of the interval")
 		    plt.pause(time_pause)
 		    self.display_interval_medlevel_intersection(right_int)
+		    #input("checking right half of the interval")
 		    plt.pause(time_pause)
 
 		    if self.odd_intersection(left_int):
@@ -278,6 +189,7 @@ class PointSet:
 		    else:
 		        self.interval = right_int
 
+		   
 		    self.display_interval_medlevel_intersection(self.interval)
 
 		plt.pause(time_pause)
