@@ -1,1 +1,5 @@
-hi
+Given disjoint sets PI, P2 ..... Pd in R a with n points in total, a hamsandwich cut is a hyperplane that simultaneously bisects the Pi.
+This is a visualisation of how a ham sandwich cut can be obtained in 2D
+
+To run:
+python3 hamSandwichCut.py
